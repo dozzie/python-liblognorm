@@ -13,6 +13,10 @@
 #define MODULE_DOCSTRING "Log normalization library."
 #define TYPE_DOCSTRING   "liblognorm context"
 
+#ifdef fjson_min
+#  define LIBFASTJSON 1
+#endif
+
 //----------------------------------------------------------------------------
 
 static
@@ -224,6 +228,8 @@ static
 PyObject* convert_hash(json_object *obj)
 {
   PyObject *result = Py_BuildValue("{}");
+#ifndef LIBFASTJSON
+  // liblognorm 1.x, with json-c library
   json_object_iter iter;
 
   json_object_object_foreachC(obj, iter) {
@@ -231,6 +237,19 @@ PyObject* convert_hash(json_object *obj)
     PyDict_SetItemString(result, iter.key, value);
     Py_DECREF(value);
   }
+#else
+  // liblognorm 2.x, with libfastjson library
+  struct fjson_object_iterator it = fjson_object_iter_begin(obj);
+  struct fjson_object_iterator end = fjson_object_iter_end(obj);
+
+  while (!fjson_object_iter_equal(&it, &end)) {
+    const char *key = fjson_object_iter_peek_name(&it);
+    PyObject *value = convert_object(fjson_object_iter_peek_value(&it));
+    PyDict_SetItemString(result, key, value);
+    Py_DECREF(value);
+    fjson_object_iter_next(&it);
+  }
+#endif
 
   return result;
 }
