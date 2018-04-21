@@ -15,7 +15,7 @@ Usage
     import sys
     import json
 
-    print liblognorm.version() # version liblognorm (not the binding module)
+    print liblognorm.version() # liblognorm's version, not the bindings module
 
     rulebase = "parsing.rules"
     lognorm = liblognorm.Lognorm(rulebase)
